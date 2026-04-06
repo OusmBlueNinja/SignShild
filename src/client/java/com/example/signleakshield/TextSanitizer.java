@@ -7,6 +7,24 @@ import net.minecraft.text.TextContent;
 import net.minecraft.text.TranslatableTextContent;
 
 public final class TextSanitizer {
+    private static final String[] BLACKLISTED_KEY_PARTS = {
+        "gey.glazed.",
+        "meteorline",
+        "meteorclient",
+        "metiorclient",
+        "itemscroller",
+        "moremousetweaks",
+        "invmove",
+        "autototem",
+        "smartoffhand",
+        "freecam",
+        "jsmacros",
+        "inventoryprofiles",
+        "tweakeroo",
+        "soundboard",
+        "accurateblockplacement"
+    };
+
     private TextSanitizer() {
     }
 
@@ -17,8 +35,12 @@ public final class TextSanitizer {
 
         TextContent content = text.getContent();
 
-        if (content instanceof TranslatableTextContent || content instanceof KeybindTextContent) {
-            return true;
+        if (content instanceof TranslatableTextContent translatable) {
+            return isBlacklistedKey(translatable.getKey());
+        }
+
+        if (content instanceof KeybindTextContent keybind) {
+            return isBlacklistedKey(keybind.getKey());
         }
 
         for (Text sibling : text.getSiblings()) {
@@ -53,7 +75,7 @@ public final class TextSanitizer {
                 out.append(translatable.getKey());
             }
         } else if (content instanceof KeybindTextContent keybind) {
-            out.append(keybind.getKey());
+            out.append(text.getString());
         } else {
             out.append(text.getString());
         }
@@ -61,5 +83,20 @@ public final class TextSanitizer {
         for (Text sibling : text.getSiblings()) {
             append(sibling, out);
         }
+    }
+
+    private static boolean isBlacklistedKey(String key) {
+        if (key == null || key.isEmpty()) {
+            return false;
+        }
+
+        String lower = key.toLowerCase();
+        for (String part : BLACKLISTED_KEY_PARTS) {
+            if (lower.contains(part)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

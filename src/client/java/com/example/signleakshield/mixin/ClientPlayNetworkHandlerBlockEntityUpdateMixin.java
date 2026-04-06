@@ -1,6 +1,7 @@
 package com.example.signleakshield.mixin;
 
 import com.example.signleakshield.ExploitState;
+import com.example.signleakshield.SignLeakShieldTraceLog;
 import com.example.signleakshield.SignTextExtractor;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
