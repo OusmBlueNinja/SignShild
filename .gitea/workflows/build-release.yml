@@ -23,6 +23,7 @@ jobs:
       GITEA_REPO: ${{ github.repository }}
       GITEA_REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
       GITEA_REF_NAME: ${{ github.ref_name }}
+      GITEA_SHA: ${{ github.sha }}
     steps:
       - name: Prepare source
         shell: bash
@@ -41,14 +42,24 @@ jobs:
           gradle --no-daemon clean build
 
       - name: Publish Gitea release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
 
           jar_path="$(ls -1 build/libs/*.jar | head -n 1)"
-          release_payload="$(printf '{"tag_name":"%s","name":"%s","body":"Automated build for %s.","draft":false,"prerelease":false}' \
-            "${GITEA_REF_NAME}" "${GITEA_REF_NAME}" "${GITEA_REF_NAME}")"
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            release_tag="${GITEA_REF_NAME}"
+            release_name="${GITEA_REF_NAME}"
+            prerelease=false
+          else
+            release_tag="build-${GITEA_SHA:0:7}"
+            release_name="build-${GITEA_SHA:0:7}"
+            prerelease=true
+          fi
+
+          release_payload="$(printf '{"tag_name":"%s","name":"%s","body":"Automated build for %s.","draft":false,"prerelease":%s}' \
+            "${release_tag}" "${release_name}" "${release_name}" "${prerelease}")"
 
           release_json="$(curl -fsS \
             -H "Authorization: token ${GITEA_TOKEN}" \
