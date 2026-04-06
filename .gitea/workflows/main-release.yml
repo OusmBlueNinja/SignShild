@@ -14,21 +14,54 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Check out
-        uses: actions/checkout@v4
+    container:
+    env:
+      GITEA_TOKEN: ${{ github.token }}
+      GITEA_API_URL: ${{ github.server_url }}/api/v1
+      GITEA_REPO: ${{ github.repository }}
+      GITEA_REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+      GITEA_REF_NAME: ${{ github.ref_name }}
+      GITEA_SHA: ${{ github.sha }}
+      GRADLE_USER_HOME: ${{ github.workspace }}/.gradle-home
 
-      - name: Set up Java
+    steps:
+      - name: Prepare source
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ ! -f build.gradle ] && [ ! -f build.gradle.kts ]; then
+            git -c http.extraHeader="Authorization: token ${GITEA_TOKEN}" \
+              clone --depth 1 "${GITEA_REPO_URL}" .
+          fi
+
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            .gradle-home/caches
+            .gradle-home/daemon
+            .gradle-home/native
+            .gradle-home/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/gradle.properties', '**/settings.gradle*', '**/libs.versions.toml') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Make wrapper executable
+        shell: bash
+        run: chmod +x ./gradlew
+
       - name: Build
         shell: bash
         run: |
           set -euo pipefail
-          bash ./gradlew --no-daemon build
+          ./gradlew remapJar --build-cache --parallel --stacktrace
 
       - name: Publish Gitea release
         if: github.event_name != 'pull_request'
@@ -36,14 +69,19 @@ jobs:
         run: |
           set -euo pipefail
 
-          jar_path="$(ls -1 build/libs/*.jar | head -n 1)"
+          jar_path="$(find build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-sources.jar' | head -n 1)"
+          if [ -z "${jar_path}" ]; then
+            echo "No release jar found in build/libs"
+            exit 1
+          fi
+
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            release_tag="${GITHUB_REF_NAME}"
-            release_name="${GITHUB_REF_NAME}"
+            release_tag="${GITEA_REF_NAME}"
+            release_name="${GITEA_REF_NAME}"
             prerelease=false
           else
-            release_tag="build-${GITHUB_SHA:0:7}"
-            release_name="build-${GITHUB_SHA:0:7}"
+            release_tag="build-${GITEA_SHA:0:7}"
+            release_name="build-${GITEA_SHA:0:7}"
             prerelease=true
           fi
 
@@ -51,10 +89,10 @@ jobs:
             "${release_tag}" "${release_name}" "${release_name}" "${prerelease}")"
 
           release_json="$(curl -fsS \
-            -H "Authorization: token ${GITHUB_TOKEN}" \
+            -H "Authorization: token ${GITEA_TOKEN}" \
             -H "Content-Type: application/json" \
             -d "${release_payload}" \
-            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/releases")"
+            "${GITEA_API_URL}/repos/${GITEA_REPO}/releases")"
 
           release_id="$(printf '%s' "${release_json}" | sed -n 's/.*"id":[[:space:]]*\([0-9][0-9]*\).*/\1/p' | head -n 1)"
           if [ -z "${release_id}" ]; then
@@ -63,16 +101,7 @@ jobs:
             exit 1
           fi
 
-          if [[ "${GITHUB_SERVER_URL}" == "https://github.com" ]]; then
-            curl -fsS \
-              -H "Authorization: token ${GITHUB_TOKEN}" \
-              -H "Content-Type: application/octet-stream" \
-              --data-binary @"${jar_path}" \
-              "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${release_id}/assets?name=$(basename "${jar_path}")"
-          else
-            curl -fsS \
-              -H "Authorization: token ${GITHUB_TOKEN}" \
-              -H "Content-Type: multipart/form-data" \
-              -F "attachment=@${jar_path}" \
-              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/releases/${release_id}/assets?name=$(basename "${jar_path}")"
-          fi
+          curl -fsS \
+            -H "Authorization: token ${GITEA_TOKEN}" \
+            -F "attachment=@${jar_path}" \
+            "${GITEA_API_URL}/repos/${GITEA_REPO}/releases/${release_id}/assets?name=$(basename "${jar_path}")"
