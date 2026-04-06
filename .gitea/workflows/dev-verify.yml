@@ -12,24 +12,35 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    container:
-      image: gradle:8.11.1-jdk21
     env:
       GITEA_TOKEN: ${{ github.token }}
       GITEA_REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+      GRADLE_USER_HOME: ${{ github.workspace }}/.gradle-home
+
     steps:
       - name: Prepare source
         shell: bash
         run: |
           set -euo pipefail
 
-          if [ ! -f build.gradle ]; then
+          if [ ! -f build.gradle ] && [ ! -f build.gradle.kts ]; then
             git -c http.extraHeader="Authorization: token ${GITEA_TOKEN}" \
               clone --depth 1 "${GITEA_REPO_URL}" .
           fi
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Make wrapper executable
+        shell: bash
+        run: chmod +x ./gradlew
 
       - name: Verify
         shell: bash
         run: |
           set -euo pipefail
-          gradle --no-daemon compileClientJava
+          ./gradlew compileClientJava --daemon --build-cache --parallel --stacktrace
