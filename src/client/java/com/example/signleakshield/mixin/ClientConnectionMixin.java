@@ -1,6 +1,7 @@
 package com.example.signleakshield.mixin;
 
 import com.example.signleakshield.ExploitState;
+import com.example.signleakshield.SignLeakShieldClient;
 import com.example.signleakshield.TextSanitizer;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.PacketCallbacks;
@@ -11,6 +12,8 @@ import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+
+import java.util.Arrays;
 
 @Mixin(ClientConnection.class)
 public abstract class ClientConnectionMixin {
@@ -49,6 +52,14 @@ public abstract class ClientConnectionMixin {
         String line2 = TextSanitizer.sanitize(lines[1]);
         String line3 = TextSanitizer.sanitize(lines[2]);
         String line4 = TextSanitizer.sanitize(lines[3]);
+
+        SignLeakShieldClient.LOGGER.info(
+            "Blocked forced sign translation event at {} front={}: got={}, returned={}",
+            pos,
+            signPacket.isFront(),
+            Arrays.toString(signPacket.getText()),
+            Arrays.toString(new String[] { line1, line2, line3, line4 })
+        );
 
         ExploitState.clearForcedOpen();
         return new UpdateSignC2SPacket(pos, signPacket.isFront(), line1, line2, line3, line4);
