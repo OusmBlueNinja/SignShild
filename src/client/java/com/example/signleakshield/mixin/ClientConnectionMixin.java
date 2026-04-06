@@ -77,18 +77,18 @@ public abstract class ClientConnectionMixin {
         }
 
         ExploitState.CapturedSignData captured = ExploitState.SIGNS.get(pos);
-        Text[] textLines;
-        if (captured != null) {
-            textLines = signPacket.isFront() ? captured.getFront() : captured.getBack();
-        } else {
-            String[] packetText = signPacket.getText();
-            textLines = new Text[] {
-                Text.literal(packetText[0]),
-                Text.literal(packetText[1]),
-                Text.literal(packetText[2]),
-                Text.literal(packetText[3])
-            };
+        if (captured == null || !captured.isSuspicious()) {
+            SignLeakShieldTraceLog.info(
+                "Outgoing sign packet allowed: captured sign missing or vanilla-safe pos=%s front=%s capturedPresent=%s",
+                pos,
+                signPacket.isFront(),
+                captured != null
+            );
+            return packet;
         }
+
+        Text[] textLines;
+        textLines = signPacket.isFront() ? captured.getFront() : captured.getBack();
 
         String line1 = TextSanitizer.sanitize(textLines[0]);
         String line2 = TextSanitizer.sanitize(textLines[1]);

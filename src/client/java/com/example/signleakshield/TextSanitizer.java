@@ -7,6 +7,30 @@ import net.minecraft.text.TextContent;
 import net.minecraft.text.TranslatableTextContent;
 
 public final class TextSanitizer {
+    private static final String[] VANILLA_TRANSLATION_PREFIXES = {
+        "advancement.",
+        "attribute.",
+        "block.minecraft.",
+        "chat.",
+        "commands.",
+        "death.",
+        "effect.minecraft.",
+        "enchantment.minecraft.",
+        "entity.minecraft.",
+        "gui.",
+        "item.minecraft.",
+        "itemGroup.",
+        "key.",
+        "menu.",
+        "options.",
+        "pack.",
+        "recipe.",
+        "resourcePack.",
+        "stat.minecraft.",
+        "subtitles.",
+        "tutorial."
+    };
+
     private TextSanitizer() {
     }
 
@@ -17,8 +41,12 @@ public final class TextSanitizer {
 
         TextContent content = text.getContent();
 
-        if (content instanceof TranslatableTextContent || content instanceof KeybindTextContent) {
-            return true;
+        if (content instanceof TranslatableTextContent translatable) {
+            return !isVanillaTranslationKey(translatable.getKey());
+        }
+
+        if (content instanceof KeybindTextContent keybind) {
+            return !isVanillaKeybindKey(keybind.getKey());
         }
 
         for (Text sibling : text.getSiblings()) {
@@ -61,5 +89,27 @@ public final class TextSanitizer {
         for (Text sibling : text.getSiblings()) {
             append(sibling, out);
         }
+    }
+
+    private static boolean isVanillaTranslationKey(String key) {
+        if (key == null || key.isEmpty()) {
+            return false;
+        }
+
+        for (String prefix : VANILLA_TRANSLATION_PREFIXES) {
+            if (key.startsWith(prefix)) {
+                return true;
+            }
+        }
+
+        return key.contains(".minecraft.");
+    }
+
+    private static boolean isVanillaKeybindKey(String key) {
+        if (key == null || !key.startsWith("key.")) {
+            return false;
+        }
+
+        return key.indexOf('.', 4) < 0;
     }
 }
