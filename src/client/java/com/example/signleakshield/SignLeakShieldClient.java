@@ -10,6 +10,7 @@ public final class SignLeakShieldClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        LOGGER.info("Sign Leak Shield initialized");
+        SignLeakShieldTraceLog.reset();
+        SignLeakShieldTraceLog.info("Sign Leak Shield initialized");
     }
 }

@@ -15,6 +15,13 @@ public final class SignLeakShieldTraceLog {
     private SignLeakShieldTraceLog() {
     }
 
+    public static synchronized void reset() {
+        try {
+            Files.deleteIfExists(LOG_PATH);
+        } catch (IOException ignored) {
+        }
+    }
+
     public static void info(String message) {
         SignLeakShieldClient.LOGGER.info(message);
         append(message);
