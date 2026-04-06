@@ -17,7 +17,7 @@ repositories {
 loom {
     mixin {
         useLegacyMixinAp = true
-        defaultRefmapName = "signleakshield.refmap.json"
+        defaultRefmapName = "client-signleakshield.refmap.json"
     }
 
     splitEnvironmentSourceSets()
