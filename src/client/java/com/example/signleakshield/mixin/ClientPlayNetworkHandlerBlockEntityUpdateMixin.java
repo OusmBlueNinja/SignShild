@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class ClientPlayNetworkHandlerBlockEntityUpdateMixin {
-    @Inject(method = "method_11094(Lnet/minecraft/network/packet/s2c/play/BlockEntityUpdateS2CPacket;)V", at = @At("HEAD"))
+    @Inject(method = "onBlockEntityUpdate(Lnet/minecraft/network/packet/s2c/play/BlockEntityUpdateS2CPacket;)V", at = @At("HEAD"))
     private void signleakshield$captureSign(BlockEntityUpdateS2CPacket packet, CallbackInfo ci) {
         if (packet.getNbt() == null) {
             return;

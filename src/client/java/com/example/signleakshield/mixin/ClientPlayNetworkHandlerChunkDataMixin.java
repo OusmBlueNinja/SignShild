@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class ClientPlayNetworkHandlerChunkDataMixin {
-    @Inject(method = "method_11128(Lnet/minecraft/network/packet/s2c/play/ChunkDataS2CPacket;)V", at = @At("HEAD"))
+    @Inject(method = "onChunkData(Lnet/minecraft/network/packet/s2c/play/ChunkDataS2CPacket;)V", at = @At("HEAD"))
     private void signleakshield$captureChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
         packet.getChunkData().getBlockEntities(packet.getChunkX(), packet.getChunkZ()).accept((localPos, type, nbt) -> {
             if (nbt == null) {

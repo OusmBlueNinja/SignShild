@@ -17,7 +17,7 @@ import java.util.Arrays;
 
 @Mixin(ClientConnection.class)
 public abstract class ClientConnectionMixin {
-    @ModifyVariable(method = "method_10743(Lnet/minecraft/class_2596;)V", at = @At("HEAD"), argsOnly = true)
+    @ModifyVariable(method = "send(Lnet/minecraft/network/packet/Packet;)V", at = @At("HEAD"), argsOnly = true)
     private Packet<?> signleakshield$rewriteOutgoing(Packet<?> packet) {
         if (!(packet instanceof UpdateSignC2SPacket signPacket)) {
             return packet;
