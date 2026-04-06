@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "com.example.signleakshield.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "ClientConnectionMixin",
+    "ClientPlayNetworkHandlerBlockEntityUpdateMixin",
+    "ClientPlayNetworkHandlerSignEditorOpenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

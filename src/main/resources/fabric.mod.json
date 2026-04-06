@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "signleakshield",
+  "version": "${version}",
+  "name": "Sign Leak Shield",
+  "description": "Client-side defensive patch for forced sign-editor translation/keybind leak probes.",
+  "authors": [
+    "Omni Systems"
+  ],
+  "contact": {
+    "email": "contact@d3lta.one",
+    "sources": "https://github.com/OusmBlueNinja/SignShild"
+  },
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.example.signleakshield.SignLeakShieldClient"
+    ]
+  },
+  "mixins": [
+    "signleakshield.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.4",
+    "minecraft": "1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
