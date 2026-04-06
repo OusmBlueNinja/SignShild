@@ -12,18 +12,26 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    container:
+      image: gradle:8.11.1-jdk21
+    env:
+      GITEA_TOKEN: ${{ github.token }}
+      GITEA_API_URL: ${{ github.server_url }}/api/v1
+      GITEA_REPO: ${{ github.repository }}
+      GITEA_REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
     steps:
-      - name: Check out
-        uses: actions/checkout@v4
+      - name: Prepare source
+        shell: bash
+        run: |
+          set -euo pipefail
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
+          if [ ! -f build.gradle ]; then
+            git -c http.extraHeader="Authorization: token ${GITEA_TOKEN}" \
+              clone --depth 1 "${GITEA_REPO_URL}" .
+          fi
 
       - name: Verify
         shell: bash
         run: |
           set -euo pipefail
-          bash ./gradlew --no-daemon compileClientJava
+          gradle --no-daemon compileClientJava

@@ -4,10 +4,10 @@
 >
 > This mod was built with the help of AI.
 
-![Main Release](https://dock-it.dev/OnniSystems/ModBlockBypass/actions/workflows/main-release.yml/badge.svg?branch=main)
-![Dev Verify](https://dock-it.dev/OnniSystems/ModBlockBypass/actions/workflows/dev-verify.yml/badge.svg?branch=dev)
+![Main Release](https://dock-it.dev/OnniSystems/SignShield/actions/workflows/main-release.yml/badge.svg?branch=main)
+![Dev Verify](https://dock-it.dev/OnniSystems/SignShield/actions/workflows/dev-verify.yml/badge.svg?branch=dev)
 
-This is a Fabric client mod for Minecraft 1.21.1 that defensively patches forced sign-editor translation and keybind leak probes.
+This is a Fabric client mod for Minecraft 1.21.11 that defensively patches forced sign-editor translation and keybind leak probes.
 
 Bypass's Anti Mod systems on Donut SMP and others like it.
 
@@ -20,5 +20,5 @@ Build:
 
 Notes:
 
-- The project targets Fabric for Minecraft 1.21.1.
+- The project targets Fabric for Minecraft 1.21.11.
 - The implementation is scoped to forced sign editor traffic and only rewrites matching outgoing sign update packets.

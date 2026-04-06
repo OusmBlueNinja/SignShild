@@ -35,11 +35,58 @@ jobs:
               clone --depth 1 "${GITEA_REPO_URL}" .
           fi
 
-      - name: Build
+      - name: Build all supported 1.21 releases
         shell: bash
         run: |
           set -euo pipefail
-          gradle --no-daemon build
+
+          release_dir="build/versioned-jars"
+          mkdir -p "${release_dir}"
+
+          build_version() {
+            local minecraft_version="$1"
+            local yarn_mappings="$2"
+            local fabric_version="$3"
+            local jar_name="sign-leak-shield-${minecraft_version}.jar"
+
+            echo "Building Minecraft ${minecraft_version}"
+            gradle --no-daemon clean build \
+              -Pminecraft_version="${minecraft_version}" \
+              -Pyarn_mappings="${yarn_mappings}" \
+              -Pfabric_version="${fabric_version}"
+
+            jar_path=""
+            shopt -s nullglob
+            for candidate in build/libs/*.jar; do
+              case "$(basename "${candidate}")" in
+                *-sources.jar|*-dev.jar)
+                  continue
+                  ;;
+              esac
+
+              jar_path="${candidate}"
+              break
+            done
+
+            if [ -z "${jar_path}" ]; then
+              echo "No build jar found for Minecraft ${minecraft_version}"
+              exit 1
+            fi
+
+            cp "${jar_path}" "${release_dir}/${jar_name}"
+          }
+
+          build_version "1.21.1" "1.21.1+build.3" "0.116.10+1.21.1"
+          build_version "1.21.2" "1.21.2+build.1" "0.106.1+1.21.2"
+          build_version "1.21.3" "1.21.3+build.2" "0.114.1+1.21.3"
+          build_version "1.21.4" "1.21.4+build.8" "0.119.4+1.21.4"
+          build_version "1.21.5" "1.21.5+build.1" "0.128.2+1.21.5"
+          build_version "1.21.6" "1.21.6+build.1" "0.128.2+1.21.6"
+          build_version "1.21.7" "1.21.7+build.8" "0.129.0+1.21.7"
+          build_version "1.21.8" "1.21.8+build.1" "0.136.1+1.21.8"
+          build_version "1.21.9" "1.21.9+build.1" "0.134.1+1.21.9"
+          build_version "1.21.10" "1.21.10+build.3" "0.138.4+1.21.10"
+          build_version "1.21.11" "1.21.11+build.4" "0.141.3+1.21.11"
 
       - name: Publish Gitea release
         if: github.event_name != 'pull_request'
@@ -47,7 +94,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          jar_path="$(ls -1 build/libs/*.jar | head -n 1)"
+          shopt -s nullglob
+          jar_paths=(build/versioned-jars/*.jar)
+          if [ "${#jar_paths[@]}" -eq 0 ]; then
+            echo "No versioned jars were built"
+            exit 1
+          fi
+
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             release_tag="${GITEA_REF_NAME}"
             release_name="${GITEA_REF_NAME}"
@@ -58,8 +111,8 @@ jobs:
             prerelease=false
           fi
 
-          release_payload="$(printf '{"tag_name":"%s","name":"%s","body":"Automated build for %s.","draft":false,"prerelease":%s}' \
-            "${release_tag}" "${release_name}" "${release_name}" "${prerelease}")"
+          release_payload="$(printf '{"tag_name":"%s","name":"%s","body":"Automated multi-version build for 1.21.1-1.21.11.","draft":false,"prerelease":%s}' \
+            "${release_tag}" "${release_name}" "${prerelease}")"
 
           release_json="$(curl -fsS \
             -H "Authorization: token ${GITEA_TOKEN}" \
@@ -74,8 +127,10 @@ jobs:
             exit 1
           fi
 
-          curl -fsS \
-            -H "Authorization: token ${GITEA_TOKEN}" \
-            -H "Content-Type: multipart/form-data" \
-            -F "attachment=@${jar_path}" \
-            "${GITEA_API_URL}/repos/${GITEA_REPO}/releases/${release_id}/assets?name=$(basename "${jar_path}")"
+          for jar_path in "${jar_paths[@]}"; do
+            curl -fsS \
+              -H "Authorization: token ${GITEA_TOKEN}" \
+              -H "Content-Type: multipart/form-data" \
+              -F "attachment=@${jar_path}" \
+              "${GITEA_API_URL}/repos/${GITEA_REPO}/releases/${release_id}/assets?name=$(basename "${jar_path}")"
+          done
