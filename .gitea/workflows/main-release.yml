@@ -55,7 +55,7 @@ jobs:
           else
             release_tag="build-${GITEA_SHA:0:7}"
             release_name="build-${GITEA_SHA:0:7}"
-            prerelease=true
+            prerelease=false
           fi
 
           release_payload="$(printf '{"tag_name":"%s","name":"%s","body":"Automated build for %s.","draft":false,"prerelease":%s}' \
