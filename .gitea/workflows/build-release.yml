@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          gradle --no-daemon clean build
+          gradle --no-daemon build
 
       - name: Publish Gitea release
         if: github.event_name != 'pull_request'
