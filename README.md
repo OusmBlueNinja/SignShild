@@ -4,7 +4,6 @@ This is a Fabric client mod for Minecraft 1.21.1 that defensively patches forced
 
 Bypass's Anti Mod systems on Donut SMP and otehr like it.
 
-
 Build:
 
 1. Install Java 21.
@@ -16,3 +15,6 @@ Notes:
 
 - The project targets Fabric for Minecraft 1.21.1.
 - The implementation is scoped to forced sign editor traffic and only rewrites matching outgoing sign update packets.
+
+> Disclosure
+> This mod was built with the help of AI.
