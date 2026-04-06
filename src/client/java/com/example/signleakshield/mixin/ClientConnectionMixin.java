@@ -77,21 +77,23 @@ public abstract class ClientConnectionMixin {
         }
 
         ExploitState.CapturedSignData captured = ExploitState.SIGNS.get(pos);
-        if (captured == null || !captured.isSuspicious()) {
-            SignLeakShieldTraceLog.info(
-                "Outgoing sign packet not rewritten: captured sign missing or not suspicious pos=%s front=%s capturedPresent=%s",
-                pos,
-                signPacket.isFront(),
-                captured != null
-            );
-            return packet;
+        Text[] textLines;
+        if (captured != null) {
+            textLines = signPacket.isFront() ? captured.getFront() : captured.getBack();
+        } else {
+            String[] packetText = signPacket.getText();
+            textLines = new Text[] {
+                Text.literal(packetText[0]),
+                Text.literal(packetText[1]),
+                Text.literal(packetText[2]),
+                Text.literal(packetText[3])
+            };
         }
 
-        Text[] lines = signPacket.isFront() ? captured.getFront() : captured.getBack();
-        String line1 = TextSanitizer.sanitize(lines[0]);
-        String line2 = TextSanitizer.sanitize(lines[1]);
-        String line3 = TextSanitizer.sanitize(lines[2]);
-        String line4 = TextSanitizer.sanitize(lines[3]);
+        String line1 = TextSanitizer.sanitize(textLines[0]);
+        String line2 = TextSanitizer.sanitize(textLines[1]);
+        String line3 = TextSanitizer.sanitize(textLines[2]);
+        String line4 = TextSanitizer.sanitize(textLines[3]);
 
         SignLeakShieldTraceLog.info(
             "Blocked forced sign translation event at %s front=%s: got=%s, returned=%s",
