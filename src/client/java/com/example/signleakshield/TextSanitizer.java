@@ -6,6 +6,8 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TextContent;
 import net.minecraft.text.TranslatableTextContent;
 
+import java.util.Locale;
+
 public final class TextSanitizer {
     private static final String[] VANILLA_TRANSLATION_PREFIXES = {
         "advancement.",
@@ -31,6 +33,23 @@ public final class TextSanitizer {
         "tutorial."
     };
 
+    private static final String[] BLACKLISTED_KEY_PARTS = {
+        "gey.glazed.",
+        "meteorclient",
+        "metiorclient",
+        "itemscroller",
+        "moremousetweaks",
+        "invmove",
+        "autototem",
+        "smartoffhand",
+        "freecam",
+        "jsmacros",
+        "inventoryprofiles",
+        "tweakeroo",
+        "soundboard",
+        "accurateblockplacement"
+    };
+
     private TextSanitizer() {
     }
 
@@ -42,11 +61,11 @@ public final class TextSanitizer {
         TextContent content = text.getContent();
 
         if (content instanceof TranslatableTextContent translatable) {
-            return !isVanillaTranslationKey(translatable.getKey());
+            return isBlacklistedKey(translatable.getKey()) || !isVanillaTranslationKey(translatable.getKey());
         }
 
         if (content instanceof KeybindTextContent keybind) {
-            return !isVanillaKeybindKey(keybind.getKey());
+            return isBlacklistedKey(keybind.getKey()) || !isVanillaKeybindKey(keybind.getKey());
         }
 
         for (Text sibling : text.getSiblings()) {
@@ -81,7 +100,7 @@ public final class TextSanitizer {
                 out.append(translatable.getKey());
             }
         } else if (content instanceof KeybindTextContent keybind) {
-            out.append(keybind.getKey());
+            out.append(text.getString());
         } else {
             out.append(text.getString());
         }
@@ -111,5 +130,20 @@ public final class TextSanitizer {
         }
 
         return key.indexOf('.', 4) < 0;
+    }
+
+    private static boolean isBlacklistedKey(String key) {
+        if (key == null || key.isEmpty()) {
+            return false;
+        }
+
+        String lower = key.toLowerCase(Locale.ROOT);
+        for (String part : BLACKLISTED_KEY_PARTS) {
+            if (lower.contains(part)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
