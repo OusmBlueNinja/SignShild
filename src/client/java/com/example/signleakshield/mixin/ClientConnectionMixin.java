@@ -79,7 +79,7 @@ public abstract class ClientConnectionMixin {
         ExploitState.CapturedSignData captured = ExploitState.SIGNS.get(pos);
         if (captured == null || !captured.isSuspicious()) {
             SignLeakShieldTraceLog.info(
-                "Outgoing sign packet allowed: captured sign missing or vanilla-safe pos=%s front=%s capturedPresent=%s",
+                "Outgoing sign packet allowed: captured sign missing or not blacklisted pos=%s front=%s capturedPresent=%s",
                 pos,
                 signPacket.isFront(),
                 captured != null

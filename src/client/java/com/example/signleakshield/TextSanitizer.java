@@ -6,35 +6,10 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TextContent;
 import net.minecraft.text.TranslatableTextContent;
 
-import java.util.Locale;
-
 public final class TextSanitizer {
-    private static final String[] VANILLA_TRANSLATION_PREFIXES = {
-        "advancement.",
-        "attribute.",
-        "block.minecraft.",
-        "chat.",
-        "commands.",
-        "death.",
-        "effect.minecraft.",
-        "enchantment.minecraft.",
-        "entity.minecraft.",
-        "gui.",
-        "item.minecraft.",
-        "itemGroup.",
-        "key.",
-        "menu.",
-        "options.",
-        "pack.",
-        "recipe.",
-        "resourcePack.",
-        "stat.minecraft.",
-        "subtitles.",
-        "tutorial."
-    };
-
     private static final String[] BLACKLISTED_KEY_PARTS = {
         "gey.glazed.",
+        "meteorline",
         "meteorclient",
         "metiorclient",
         "itemscroller",
@@ -61,11 +36,11 @@ public final class TextSanitizer {
         TextContent content = text.getContent();
 
         if (content instanceof TranslatableTextContent translatable) {
-            return isBlacklistedKey(translatable.getKey()) || !isVanillaTranslationKey(translatable.getKey());
+            return isBlacklistedKey(translatable.getKey());
         }
 
         if (content instanceof KeybindTextContent keybind) {
-            return isBlacklistedKey(keybind.getKey()) || !isVanillaKeybindKey(keybind.getKey());
+            return isBlacklistedKey(keybind.getKey());
         }
 
         for (Text sibling : text.getSiblings()) {
@@ -110,34 +85,12 @@ public final class TextSanitizer {
         }
     }
 
-    private static boolean isVanillaTranslationKey(String key) {
-        if (key == null || key.isEmpty()) {
-            return false;
-        }
-
-        for (String prefix : VANILLA_TRANSLATION_PREFIXES) {
-            if (key.startsWith(prefix)) {
-                return true;
-            }
-        }
-
-        return key.contains(".minecraft.");
-    }
-
-    private static boolean isVanillaKeybindKey(String key) {
-        if (key == null || !key.startsWith("key.")) {
-            return false;
-        }
-
-        return key.indexOf('.', 4) < 0;
-    }
-
     private static boolean isBlacklistedKey(String key) {
         if (key == null || key.isEmpty()) {
             return false;
         }
 
-        String lower = key.toLowerCase(Locale.ROOT);
+        String lower = key.toLowerCase();
         for (String part : BLACKLISTED_KEY_PARTS) {
             if (lower.contains(part)) {
                 return true;
