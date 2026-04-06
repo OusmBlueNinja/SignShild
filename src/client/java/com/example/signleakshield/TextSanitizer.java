@@ -7,11 +7,14 @@ import net.minecraft.text.TextContent;
 import net.minecraft.text.TranslatableTextContent;
 
 public final class TextSanitizer {
-    private static final String[] BLACKLISTED_KEY_PARTS = {
+    private static final String[] SUSPICIOUS_KEY_PARTS = {
         "gey.glazed.",
+        "key.meteor-client.",
+        "meteor-client",
         "meteorline",
         "meteorclient",
         "metiorclient",
+        "meteordevelopment.meteorclient",
         "itemscroller",
         "moremousetweaks",
         "invmove",
@@ -36,11 +39,22 @@ public final class TextSanitizer {
         TextContent content = text.getContent();
 
         if (content instanceof TranslatableTextContent translatable) {
-            return isBlacklistedKey(translatable.getKey());
+            if (isBlacklistedKey(translatable.getKey())) {
+                return true;
+            }
+
+            for (Object arg : translatable.getArgs()) {
+                if (isSuspiciousArgument(arg)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         if (content instanceof KeybindTextContent keybind) {
-            return isBlacklistedKey(keybind.getKey());
+            String key = keybind.getKey();
+            return key != null && !VanillaKeybinds.isVanillaKey(key);
         }
 
         for (Text sibling : text.getSiblings()) {
@@ -75,7 +89,8 @@ public final class TextSanitizer {
                 out.append(translatable.getKey());
             }
         } else if (content instanceof KeybindTextContent keybind) {
-            out.append(text.getString());
+            String key = keybind.getKey();
+            out.append(key != null ? key : "");
         } else {
             out.append(text.getString());
         }
@@ -91,10 +106,42 @@ public final class TextSanitizer {
         }
 
         String lower = key.toLowerCase();
-        for (String part : BLACKLISTED_KEY_PARTS) {
+        for (String part : SUSPICIOUS_KEY_PARTS) {
             if (lower.contains(part)) {
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    private static boolean isSuspiciousArgument(Object arg) {
+        if (arg == null) {
+            return false;
+        }
+
+        if (arg instanceof Text text) {
+            return isSuspicious(text);
+        }
+
+        if (arg instanceof KeybindTextContent keybind) {
+            return !VanillaKeybinds.isVanillaKey(keybind.getKey());
+        }
+
+        if (arg instanceof TranslatableTextContent translatable) {
+            if (isBlacklistedKey(translatable.getKey())) {
+                return true;
+            }
+
+            for (Object nested : translatable.getArgs()) {
+                if (isSuspiciousArgument(nested)) {
+                    return true;
+                }
+            }
+        }
+
+        if (arg instanceof CharSequence sequence) {
+            return isBlacklistedKey(sequence.toString());
         }
 
         return false;
