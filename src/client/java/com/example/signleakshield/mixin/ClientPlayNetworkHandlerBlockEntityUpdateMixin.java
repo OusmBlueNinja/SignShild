@@ -1,6 +1,7 @@
 package com.example.signleakshield.mixin;
 
 import com.example.signleakshield.ExploitState;
+import com.example.signleakshield.SignLeakShieldTraceLog;
 import com.example.signleakshield.SignTextExtractor;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -15,6 +16,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class ClientPlayNetworkHandlerBlockEntityUpdateMixin {
     @Inject(method = "onBlockEntityUpdate(Lnet/minecraft/network/packet/s2c/play/BlockEntityUpdateS2CPacket;)V", at = @At("HEAD"))
     private void signleakshield$captureSign(BlockEntityUpdateS2CPacket packet, CallbackInfo ci) {
+        SignLeakShieldTraceLog.info(
+            "Block entity update received: pos=%s type=%s hasNbt=%s",
+            packet.getPos(),
+            packet.getBlockEntityType(),
+            packet.getNbt() != null
+        );
         if (packet.getNbt() == null) {
             return;
         }
@@ -24,6 +31,12 @@ public abstract class ClientPlayNetworkHandlerBlockEntityUpdateMixin {
         }
 
         BlockPos pos = packet.getPos();
+        SignLeakShieldTraceLog.info(
+            "Block entity sign captured: pos=%s type=%s nbtKeys=%s",
+            pos,
+            packet.getBlockEntityType(),
+            packet.getNbt().getKeys()
+        );
         ExploitState.SIGNS.put(pos.toImmutable(), SignTextExtractor.fromNbt(packet.getNbt()));
     }
 }
