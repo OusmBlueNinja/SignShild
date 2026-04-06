@@ -1,0 +1,35 @@
+name: Dev Verify
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    container:
+      image: gradle:8.11.1-jdk21
+    env:
+      GITEA_TOKEN: ${{ github.token }}
+      GITEA_REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+    steps:
+      - name: Prepare source
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ ! -f build.gradle ]; then
+            git -c http.extraHeader="Authorization: token ${GITEA_TOKEN}" \
+              clone --depth 1 "${GITEA_REPO_URL}" .
+          fi
+
+      - name: Verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle --no-daemon compileClientJava
