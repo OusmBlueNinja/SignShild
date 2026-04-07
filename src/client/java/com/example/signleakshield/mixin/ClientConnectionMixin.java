@@ -89,21 +89,33 @@ public abstract class ClientConnectionMixin {
 
         Text[] textLines;
         textLines = signPacket.isFront() ? captured.getFront() : captured.getBack();
+        String[] originalResponse = signPacket.getText();
 
         String line1 = TextSanitizer.sanitize(textLines[0]);
         String line2 = TextSanitizer.sanitize(textLines[1]);
         String line3 = TextSanitizer.sanitize(textLines[2]);
         String line4 = TextSanitizer.sanitize(textLines[3]);
+        String[] returnedResponse = new String[] { line1, line2, line3, line4 };
 
         SignLeakShieldTraceLog.info(
-            "Blocked forced sign translation event at %s front=%s: got=%s, returned=%s",
+            "Blocked forced sign translation event at %s front=%s: receivedSign=%s, unmodifiedResponse=%s, returned=%s",
             pos,
             signPacket.isFront(),
-            Arrays.toString(signPacket.getText()),
-            Arrays.toString(new String[] { line1, line2, line3, line4 })
+            describeTextLines(textLines),
+            Arrays.toString(originalResponse),
+            Arrays.toString(returnedResponse)
         );
 
         ExploitState.clearForcedOpen();
         return new UpdateSignC2SPacket(pos, signPacket.isFront(), line1, line2, line3, line4);
+    }
+
+    private static String describeTextLines(Text[] lines) {
+        String[] values = new String[lines.length];
+        for (int i = 0; i < lines.length; i++) {
+            values[i] = lines[i] != null ? lines[i].getString() : "";
+        }
+
+        return Arrays.toString(values);
     }
 }
