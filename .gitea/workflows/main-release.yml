@@ -40,8 +40,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          release_dir="build/versioned-jars"
-          mkdir -p "${release_dir}"
+          release_dir="versioned-jars"
 
           build_version() {
             local minecraft_version="$1"
@@ -54,6 +53,8 @@ jobs:
               -Pminecraft_version="${minecraft_version}" \
               -Pyarn_mappings="${yarn_mappings}" \
               -Pfabric_version="${fabric_version}"
+
+            mkdir -p "${release_dir}"
 
             jar_path=""
             shopt -s nullglob
@@ -95,7 +96,7 @@ jobs:
           set -euo pipefail
 
           shopt -s nullglob
-          jar_paths=(build/versioned-jars/*.jar)
+          jar_paths=(versioned-jars/*.jar)
           if [ "${#jar_paths[@]}" -eq 0 ]; then
             echo "No versioned jars were built"
             exit 1
