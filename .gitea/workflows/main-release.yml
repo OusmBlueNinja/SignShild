@@ -16,7 +16,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: gradle:8.14.5-jdk21
+      image: gradle:8.14.5-jdk21@sha256:a8741ddd2055e9948af8082598ef7b44e6077be246f03a79d42204ffdd6153b1
     strategy:
       fail-fast: false
       matrix:
@@ -115,7 +115,7 @@ jobs:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     container:
-      image: gradle:8.14.5-jdk21
+      image: gradle:8.14.5-jdk21@sha256:a8741ddd2055e9948af8082598ef7b44e6077be246f03a79d42204ffdd6153b1
     env:
       GITEA_TOKEN: ${{ github.token }}
       GITEA_API_URL: ${{ github.server_url }}/api/v1
