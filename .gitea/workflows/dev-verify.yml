@@ -13,7 +13,7 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     container:
-      image: gradle:8.11.1-jdk21
+      image: gradle:9.6.0-jdk21@sha256:6b71d4d40e45200709c178ca0ab10125e1d99e6e44dec6bcbabd0a3371f8e650
     env:
       GITEA_TOKEN: ${{ github.token }}
       GITEA_API_URL: ${{ github.server_url }}/api/v1
